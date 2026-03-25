@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AR Card Demo</title>
+  <title>AR Card — Video</title>
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
@@ -69,18 +69,24 @@
     #found-badge.show { opacity: 1; }
   </style>
   <script>
-    AFRAME.registerComponent('target-events', {
+    // Play video on target found, pause on lost
+    AFRAME.registerComponent('video-target', {
       init: function () {
+        const vid = document.getElementById('ar-video');
         const hint = document.getElementById('scan-hint');
         const frame = document.getElementById('scan-frame');
         const badge = document.getElementById('found-badge');
+
         this.el.addEventListener('targetFound', () => {
+          vid.play();
           hint.classList.add('hidden');
           frame.classList.add('hidden');
           badge.classList.add('show');
           setTimeout(() => badge.classList.remove('show'), 2000);
         });
+
         this.el.addEventListener('targetLost', () => {
+          vid.pause();
           hint.classList.remove('hidden');
           frame.classList.remove('hidden');
         });
@@ -98,14 +104,28 @@
   <div id="found-badge">Card detected!</div>
 
   <!--
-    TO USE YOUR OWN IMAGE:
-    1. Go to https://hiukim.github.io/mind-ar-js-doc/tools/compile/
-    2. Upload your image, click Start, download targets.mind
-    3. Put targets.mind next to this index.html
-    4. Change imageTargetSrc below to: ./targets.mind
+    SETUP:
+    1. Put your video file (MP4) in the same folder as this file
+    2. Rename it to video.mp4 (or change the src below)
+    3. Put your targets.mind in the same folder
+    4. Update imageTargetSrc if needed
+
+    VIDEO TIPS:
+    - MP4 with H.264 codec works on all phones
+    - Keep it under 25MB for GitHub hosting
+    - 720p is plenty for AR overlay
+    - Short videos (15-60 sec) work best
+
+    VIDEO SIZE (width/height below):
+    - width="1" means same width as the card
+    - Adjust height to match your video aspect ratio:
+      16:9 video = height="0.56"
+      4:3 video  = height="0.75"
+      1:1 video  = height="1"
+      9:16 vertical video = width="0.56" height="1"
   -->
   <a-scene
-    mindar-image="imageTargetSrc: ./RDRTarget.mind;
+    mindar-image="imageTargetSrc: ./targets.mind;
                    filterMinCF: 0.001;
                    filterBeta: 100;
                    missTolerance: 15;
@@ -115,63 +135,33 @@
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
+    <!-- Preload video -->
+    <a-assets>
+      <video id="ar-video"
+             src="./video.mp4"
+             preload="auto"
+             loop="true"
+             muted
+             playsinline
+             webkit-playsinline
+             crossorigin="anonymous">
+      </video>
+    </a-assets>
+
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-entity mindar-image-target="targetIndex: 0" target-events>
+    <a-entity mindar-image-target="targetIndex: 0" video-target>
 
-      <!-- Glow overlay on the card surface -->
-      <a-plane position="0 0 0" width="1" height="0.552"
-        color="#00ff88" opacity="0.15" material="transparent: true">
-      </a-plane>
-
-      <!-- Spinning cube floating above card -->
-      <a-box position="0 0.35 0.15" width="0.25" height="0.25" depth="0.25"
-        color="#4CC3D9" material="metalness: 0.3; roughness: 0.4"
-        animation="property: rotation; to: 360 360 0; loop: true; dur: 4000; easing: linear"
-        animation__float="property: position; from: 0 0.3 0.15; to: 0 0.45 0.15;
-                          loop: true; dur: 2000; dir: alternate; easing: easeInOutSine">
-      </a-box>
-
-      <!-- Orbiting red sphere -->
-      <a-entity position="0 0.35 0.15"
-        animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
-        <a-sphere position="0.35 0 0" radius="0.06" color="#EF2D5E"
-          material="metalness: 0.5; roughness: 0.2">
-        </a-sphere>
-      </a-entity>
-
-      <!-- Orbiting gold sphere (opposite direction) -->
-      <a-entity position="0 0.35 0.15"
-        animation="property: rotation; to: 0 -360 0; loop: true; dur: 2400; easing: linear">
-        <a-sphere position="0 0 0.3" radius="0.04" color="#FFC65D"
-          material="metalness: 0.5; roughness: 0.2">
-        </a-sphere>
-      </a-entity>
-
-      <!-- Floating text -->
-      <a-text value="Hello from AR!" position="0 0.65 0.1" align="center"
-        color="#ffffff" width="1.2" font="mozillavr"
-        animation="property: position; from: 0 0.62 0.1; to: 0 0.68 0.1;
-                   loop: true; dur: 1500; dir: alternate; easing: easeInOutSine">
-      </a-text>
-
-      <!-- Purple ring -->
-      <a-torus position="0 0.35 0.15" radius="0.4" radius-tubular="0.008"
-        color="#7B68EE" material="opacity: 0.7; transparent: true" rotation="90 0 0"
-        animation="property: rotation; from: 90 0 0; to: 90 360 0;
-                   loop: true; dur: 6000; easing: linear">
-      </a-torus>
-
-      <!-- Green tilted ring -->
-      <a-torus position="0 0.35 0.15" radius="0.35" radius-tubular="0.006"
-        color="#00ff88" material="opacity: 0.5; transparent: true" rotation="60 45 0"
-        animation="property: rotation; from: 60 45 0; to: 60 405 0;
-                   loop: true; dur: 5000; easing: linear">
-      </a-torus>
-
-      <!-- Lighting -->
-      <a-light type="ambient" color="#ffffff" intensity="0.6"></a-light>
-      <a-light type="directional" color="#ffffff" intensity="0.8" position="1 2 1"></a-light>
+      <!-- Video plane floating above the card -->
+      <!-- position: 0 0.4 0 = centered, slightly above card -->
+      <!-- width/height: adjust to match your video aspect ratio -->
+      <a-video
+        src="#ar-video"
+        position="0 0.4 0.05"
+        width="1"
+        height="0.56"
+        rotation="0 0 0">
+      </a-video>
 
     </a-entity>
   </a-scene>
