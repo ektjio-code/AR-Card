@@ -9,16 +9,6 @@
   <style>
     * { margin: 0; padding: 0; }
     body { overflow: hidden; }
-    #overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-    }
     #scan-hint {
       background: rgba(0,0,0,0.7);
       color: #fff;
@@ -29,32 +19,17 @@
       text-align: center;
       position: fixed;
       bottom: 60px;
+      z-index: 1000;
+      left: 50%;
+      transform: translateX(-50%);
       transition: opacity 0.5s;
     }
     #scan-hint.hidden { opacity: 0; }
-    #scan-frame {
-      width: 220px;
-      height: 220px;
-      border: 3px solid rgba(255,255,255,0.6);
-      border-radius: 16px;
-      position: relative;
-      transition: opacity 0.5s;
-    }
-    #scan-frame.hidden { opacity: 0; }
-    #scan-line {
-      position: absolute;
-      top: 0; left: 8px; right: 8px;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #00ff88, transparent);
-      animation: scanMove 2s ease-in-out infinite;
-    }
-    @keyframes scanMove {
-      0%, 100% { top: 8px; }
-      50% { top: calc(100% - 10px); }
-    }
     #found-badge {
       position: fixed;
       top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
       background: rgba(0,200,100,0.85);
       color: #fff;
       padding: 10px 24px;
@@ -73,13 +48,11 @@
       init: function () {
         const vid = document.getElementById('ar-video');
         const hint = document.getElementById('scan-hint');
-        const frame = document.getElementById('scan-frame');
         const badge = document.getElementById('found-badge');
 
         this.el.addEventListener('targetFound', () => {
           vid.play();
           hint.classList.add('hidden');
-          frame.classList.add('hidden');
           badge.classList.add('show');
           setTimeout(() => badge.classList.remove('show'), 2000);
         });
@@ -87,70 +60,39 @@
         this.el.addEventListener('targetLost', () => {
           vid.pause();
           hint.classList.remove('hidden');
-          frame.classList.remove('hidden');
         });
       }
     });
   </script>
 </head>
 <body>
-  <div id="overlay">
-    <div id="scan-frame">
-      <div id="scan-line"></div>
-    </div>
-  </div>
   <div id="scan-hint">Point your camera at the card</div>
   <div id="found-badge">Card detected!</div>
 
-  <!--
-    YOUR FILES (all 3 must be in the same GitHub repo):
-    1. index.html    — this file
-    2. targets.mind  — compiled from your image
-    3. video.mp4     — your video (rename your file to video.mp4)
-
-    VIDEO ASPECT RATIO — change width/height on the a-video below:
-      16:9 video  → width="1" height="0.56"
-      4:3 video   → width="1" height="0.75"
-      1:1 square  → width="1" height="1"
-      9:16 vertical → width="0.56" height="1"
-  -->
   <a-scene
-    mindar-image="imageTargetSrc: ./targets.mind;
-                   filterMinCF: 0.001;
-                   filterBeta: 100;
-                   missTolerance: 15;
-                   uiScanning: no;"
+    mindar-image="imageTargetSrc: ./targets.mind;"
     color-space="sRGB"
     renderer="colorManagement: true, physicallyCorrectLights"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
-    <!-- timeout: don't let slow video loading block the AR scene from starting -->
     <a-assets timeout="3000">
       <video id="ar-video"
              src="./video.mp4"
              preload="auto"
-             loop="true"
+             loop
              muted
              playsinline
-             webkit-playsinline
+             webkit-playsinline>
       </video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0" video-target>
-
-      <!-- Video floating above the card -->
-      <a-video
-        src="#ar-video"
-        position="0 0.4 0.05"
-        width="1"
-        height="0.56"
-        rotation="0 0 0">
-      </a-video>
-
+      <a-video src="#ar-video" position="0 0.4 0.05" width="1" height="0.56"></a-video>
     </a-entity>
+
   </a-scene>
 </body>
 </html>
